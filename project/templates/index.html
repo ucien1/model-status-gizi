@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediksi Status Gizi Balita</title>
+</head>
+<body>
+    <h1>Prediksi Status Gizi Balita</h1>
+    
+    <!-- Form untuk input data balita -->
+    <form id="predictForm">
+        <label for="umur">Umur (bulan):</label>
+        <input type="number" id="umur" name="Umur" required>
+        <br>
+
+        <label for="jenisKelamin">Jenis Kelamin:</label>
+        <select id="jenisKelamin" name="Jenis Kelamin" required>
+            <option value="laki-laki">Laki-Laki</option>
+            <option value="perempuan">Perempuan</option>
+        </select>
+        <br>
+
+        <label for="tinggiBadan">Tinggi Badan (cm):</label>
+        <input type="number" id="tinggiBadan" name="Tinggi Badan" required>
+        <br>
+
+        <button type="button" onclick="submitForm()">Prediksi</button>
+    </form>
+
+    <!-- Tempat untuk menampilkan hasil prediksi -->
+    <div id="result">
+        <!-- Hasil prediksi akan ditampilkan di sini -->
+    </div>
+
+    <script>
+        // Fungsi untuk mengirimkan data ke API Flask
+        async function submitForm() {
+            const umur = document.getElementById('umur').value;
+            const jenisKelamin = document.getElementById('jenisKelamin').value;
+            const tinggiBadan = document.getElementById('tinggiBadan').value;
+
+            const data = {
+                "Umur": parseInt(umur),  // Pastikan umur adalah integer
+                "Jenis Kelamin": jenisKelamin,  // "laki-laki" atau "perempuan"
+                "Tinggi Badan": parseFloat(tinggiBadan)  // Pastikan tinggi badan adalah float
+            };
+
+            console.log('Data yang dikirim:', data);  // Log data yang dikirim
+
+            try {
+                // Mengirimkan data ke API Flask untuk prediksi
+                const response = await fetch('http://127.0.0.1:5000/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                // Menangani respons dari API
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Prediction:', result);
+
+                    // Menampilkan hasil prediksi di halaman
+                    document.getElementById('result').innerHTML = `
+                        <p>Umur: ${result.Umur} bulan</p>
+                        <p>Jenis Kelamin: ${result['Jenis Kelamin']}</p>
+                        <p>Tinggi Badan: ${result['Tinggi Badan']} cm</p>
+                        <p>Prediksi Status Gizi: ${result['Prediksi Status Gizi']}</p>
+                    `;
+                } else {
+                    // Menangani error jika request gagal
+                    const errorData = await response.json();
+                    console.error('Error:', errorData);
+                    document.getElementById('result').innerHTML = `
+                        <p>Error: ${errorData.error}</p>
+                    `;
+                }
+            } catch (error) {
+                // Menangani error pada saat request
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = `
+                    <p>Error: ${error.message}</p>
+                `;
+            }
+        }
+    </script>
+
